@@ -64,7 +64,45 @@ app.layout = html.Div(className='app', children=[
     html.Div(className='card', children=[dcc.Graph(figure=fig_regional)]),
     html.Div(className='card', children=[dcc.Graph(figure=tema(fig_estado))]),
     html.Div(className='card', children=[html.H4('Total de Vendas por Produto'), tabela_produto]),
+
+    # Item 2: três gráficos com filtro
+    html.Div(className='card', children=[
+        dcc.Dropdown(id='filtro-regional', options=sorted(df['Regional'].unique()),
+                     placeholder='Filtrar por Regional'),
+        dcc.Graph(id='grafico-regional'),
+    ]),
+    html.Div(className='card', children=[
+        dcc.Dropdown(id='filtro-mes', options=meses, placeholder='Filtrar por Mês'),
+        dcc.Graph(id='grafico-mes'),
+    ]),
+    html.Div(className='card', children=[
+        dcc.Dropdown(id='filtro-produto', options=sorted(df['Produto'].unique()),
+                     placeholder='Filtrar por Produto'),
+        dcc.Graph(id='grafico-produto'),
+    ]),
 ])
+
+
+# ---------- Item 2: callbacks ----------
+@app.callback(Output('grafico-regional', 'figure'), Input('filtro-regional', 'value'))
+def grafico_por_regional(regional):
+    dados = df if regional is None else df[df['Regional'] == regional]
+    dados = dados.groupby('Mês', observed=True)['Total de Vendas'].sum().reset_index()
+    return tema(px.line(dados, x='Mês', y='Total de Vendas', title='Vendas por Mês (filtro: Regional)'))
+
+
+@app.callback(Output('grafico-mes', 'figure'), Input('filtro-mes', 'value'))
+def grafico_por_mes(mes):
+    dados = df if mes is None else df[df['Mês'] == mes]
+    dados = dados.groupby('Representante')['Total de Vendas'].sum().reset_index()
+    return tema(px.bar(dados, x='Representante', y='Total de Vendas', title='Vendas por Representante (filtro: Mês)'))
+
+
+@app.callback(Output('grafico-produto', 'figure'), Input('filtro-produto', 'value'))
+def grafico_por_produto(produto):
+    dados = df if produto is None else df[df['Produto'] == produto]
+    dados = dados.groupby('Cliente')['Total de Vendas'].sum().reset_index()
+    return tema(px.bar(dados, x='Cliente', y='Total de Vendas', title='Vendas por Cliente (filtro: Produto)'))
 
 
 if __name__ == '__main__':
