@@ -80,6 +80,14 @@ app.layout = html.Div(className='app', children=[
                      placeholder='Filtrar por Produto'),
         dcc.Graph(id='grafico-produto'),
     ]),
+
+    # Item 3: Estado -> Cidade
+    html.Div(className='card', children=[
+        dcc.Dropdown(id='filtro-estado', options=sorted(df['Estado'].unique()),
+                     placeholder='Selecione o Estado'),
+        dcc.Dropdown(id='filtro-cidade', placeholder='Selecione a Cidade'),
+        dcc.Graph(id='grafico-cidade'),
+    ]),
 ])
 
 
@@ -103,6 +111,24 @@ def grafico_por_produto(produto):
     dados = df if produto is None else df[df['Produto'] == produto]
     dados = dados.groupby('Cliente')['Total de Vendas'].sum().reset_index()
     return tema(px.bar(dados, x='Cliente', y='Total de Vendas', title='Vendas por Cliente (filtro: Produto)'))
+
+
+# ---------- Item 3: Estado -> Cidade ----------
+@app.callback(Output('filtro-cidade', 'options'), Input('filtro-estado', 'value'))
+def atualiza_cidades(estado):
+    return sorted(df[df['Estado'] == estado]['Cidade'].unique())
+
+
+@app.callback(Output('grafico-cidade', 'figure'),
+              Input('filtro-estado', 'value'), Input('filtro-cidade', 'value'))
+def grafico_cidade(estado, cidade):
+    dados = df
+    if estado is not None:
+        dados = dados[dados['Estado'] == estado]
+    if cidade is not None:
+        dados = dados[dados['Cidade'] == cidade]
+    dados = dados.groupby('Produto')['Total de Vendas'].sum().reset_index()
+    return tema(px.bar(dados, x='Produto', y='Total de Vendas', title='Vendas por Produto (filtro: Estado e Cidade)'))
 
 
 if __name__ == '__main__':
