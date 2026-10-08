@@ -36,3 +36,5 @@ cd nome-do-repositorio
 pip install -r requirements.txt
 python dashboard_vendas.py
 ```
+
+url: https://franciscograveli.pythonanywhere.com
